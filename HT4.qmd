@@ -5,3 +5,19 @@ editor: visual
 ---
 
 ## Hoja de Trabajo 4: Árboles de decisión
+
+```{r include=FALSE}
+
+library(psych)
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(psych)
+library(corrplot)
+library(RColorBrewer)
+library(nortest)
+library(lmtest)
+library(jtools)
+
+pricesTrain <- read.csv("train.csv")
+```
