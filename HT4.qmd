@@ -21,3 +21,38 @@ library(jtools)
 
 pricesTrain <- read.csv("train.csv")
 ```
+
+
+```{r}
+set.seed(123)
+p <- 0.7
+corte <- sample(nrow(pricesTrain), nrow(pricesTrain) * p)
+train <- pricesTrain[corte,]
+train['YearsBuilt'] = 2023 - train$YearBuilt
+train['YearsRem'] = 2023 - train$YearRemodAdd
+test <- pricesTrain[-corte,]
+test['YearsBuilt'] = 2023 - test$YearBuilt
+test['YearsRem'] = 2023 - test$YearRemodAdd
+```
+
+### arbol de regresion
+```{r multivariable}
+str(train)
+numericasTrain <- train[, c('MSSubClass', 'LotArea', 'OverallQual', 'OverallCond', 'YearsBuilt', 'YearsRem', 'BsmtFinSF1', 'BsmtFinSF2', 'BsmtUnfSF', 'TotalBsmtSF', 'X1stFlrSF', 'X2ndFlrSF', 'LowQualFinSF', 'GrLivArea', 'BsmtFullBath', 'BsmtHalfBath', 'FullBath', 'HalfBath', 'BedroomAbvGr', 'KitchenAbvGr', 'TotRmsAbvGrd', 'Fireplaces', 'GarageCars', 'GarageArea', 'WoodDeckSF', 'OpenPorchSF', 'EnclosedPorch', 'X3SsnPorch', 'ScreenPorch', 'PoolArea', 'MiscVal', 'MoSold', 'SalePrice')]
+numericasTest <- test[, c('MSSubClass', 'LotArea', 'OverallQual', 'OverallCond', 'YearsBuilt', 'YearsRem', 'BsmtFinSF1', 'BsmtFinSF2', 'BsmtUnfSF', 'TotalBsmtSF', 'X1stFlrSF', 'X2ndFlrSF', 'LowQualFinSF', 'GrLivArea', 'BsmtFullBath', 'BsmtHalfBath', 'FullBath', 'HalfBath', 'BedroomAbvGr', 'KitchenAbvGr', 'TotRmsAbvGrd', 'Fireplaces', 'GarageCars', 'GarageArea', 'WoodDeckSF', 'OpenPorchSF', 'EnclosedPorch', 'X3SsnPorch', 'ScreenPorch', 'PoolArea', 'MiscVal', 'MoSold', 'SalePrice')]
+library(rpart)
+arbol1 <- rpart(SalePrice ~ .,data=numericasTrain)
+rpart.plot(arbol1)
+```
+
+### que tan bueno es
+```{r}
+ventas <- numericasTest$SalePrice
+test2 <- numericasTest[,-81]
+a<-predict(arbol1,newdata=test2)
+b<-mean(a-test$GrLivArea)
+plot(test$GrLivArea,a,col="green")
+par(new=TRUE)
+plot(test$GrLivArea,test$SalePrice,col="blue")
+```
+
