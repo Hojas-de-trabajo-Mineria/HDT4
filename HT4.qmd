@@ -25,7 +25,6 @@ library(caret)
 pricesTrain <- read.csv("train.csv")
 ```
 
-
 ```{r}
 set.seed(456)
 p <- 0.7
@@ -39,6 +38,7 @@ test['YearsRem'] = 2023 - test$YearRemodAdd
 ```
 
 ### arbol de regresion
+
 ```{r multivariable}
 str(train)
 numericasTrain <- train[, c('MSSubClass', 'LotArea', 'OverallQual', 'OverallCond', 'YearsBuilt', 'YearsRem', 'BsmtFinSF1', 'BsmtFinSF2', 'BsmtUnfSF', 'TotalBsmtSF', 'X1stFlrSF', 'X2ndFlrSF', 'LowQualFinSF', 'GrLivArea', 'BsmtFullBath', 'BsmtHalfBath', 'FullBath', 'HalfBath', 'BedroomAbvGr', 'KitchenAbvGr', 'TotRmsAbvGrd', 'Fireplaces', 'GarageCars', 'GarageArea', 'WoodDeckSF', 'OpenPorchSF', 'EnclosedPorch', 'X3SsnPorch', 'ScreenPorch', 'PoolArea', 'MiscVal', 'MoSold', 'SalePrice')]
@@ -49,15 +49,33 @@ rpart.plot(arbol1)
 ```
 
 ### que tan bueno es
+
 ```{r}
 ventas <- numericasTest$SalePrice
 test2 <- numericasTest[,-81]
 a<-predict(arbol1,newdata=test2)
-b<-mean(a-test$GrLivArea)
+b1<-mean(a-test$GrLivArea)
 plot(test$GrLivArea,a,col="green")
 par(new=TRUE)
 plot(test$GrLivArea,test$SalePrice,col="blue")
+
 ```
+
+### Cambiando la profundidad 
+
+```{r}
+arbol2 <- rpart(SalePrice ~ .,data=numericasTrain,cp=0.1)
+a2<-predict(arbol2,newdata=test2)
+b2<-mean(a2-test$GrLivArea)
+arbol3 <- rpart(SalePrice ~ .,data=numericasTrain,cp=0.5)
+a3<-predict(arbol3,newdata=test2)
+b3<-mean(a3-test$GrLivArea)
+arbol4 <- rpart(SalePrice ~ .,data=numericasTrain,cp=0.3)
+a4<-predict(arbol4,newdata=test2)
+b4<-mean(a4-test$GrLivArea)
+```
+
+podemos notar que el arbol con un menor error es cuando tiene una profundidad de 0.3
 
 ### Nueva Variable respuesta
 
@@ -127,4 +145,3 @@ ypred <- factor(ypred)
 
 confusionMatrix(ypred, y)
 ```
-
