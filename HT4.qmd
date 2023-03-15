@@ -18,13 +18,16 @@ library(RColorBrewer)
 library(nortest)
 library(lmtest)
 library(jtools)
+library(rpart)
+library(rpart.plot)
+library(caret)
 
 pricesTrain <- read.csv("train.csv")
 ```
 
 
 ```{r}
-set.seed(123)
+set.seed(456)
 p <- 0.7
 corte <- sample(nrow(pricesTrain), nrow(pricesTrain) * p)
 train <- pricesTrain[corte,]
@@ -54,5 +57,74 @@ b<-mean(a-test$GrLivArea)
 plot(test$GrLivArea,a,col="green")
 par(new=TRUE)
 plot(test$GrLivArea,test$SalePrice,col="blue")
+```
+
+### Nueva Variable respuesta
+
+```{r}
+str(pricesTrain$SalePrice)
+quantile(pricesTrain$SalePrice, na.rm = T, probs = c(0,0.33,0.66,1))
+```
+
+Tomando como referencia las divisiones realizadas por los percentiles, clasificaremos como casa Económica aquellas que se encuentren en el rango $\$34900-\$139000$, casa Intermedia $\$139001-\$189893$ y casa Cara entre $\$189894 - \$755000$
+
+#### Dividir los datos
+
+A continuacion se creará el nuevo DataFrame que contendra una nueva columa con la división anterior, de modo que se pueda saber la clasificación de cada casa
+
+```{r dividir}
+orderPrice <- pricesTrain[order(pricesTrain$SalePrice),]
+orderPrice['Clasificacion']<- list(1:nrow(orderPrice))
+orderPrice <- orderPrice %>% select(-c(Id, MSSubClass,MSZoning,Street,Alley,LotShape, LandContour, Utilities, LotConfig, LandSlope, Neighborhood, Condition1, Condition2, BldgType, HouseStyle, OverallQual, OverallCond, RoofStyle, RoofMatl, Exterior1st, Exterior2nd, MasVnrType, ExterQual, ExterCond,Foundation, BsmtQual, BsmtCond, BsmtExposure, BsmtFinType1, BsmtFinSF1, BsmtFinType2, Heating, HeatingQC, CentralAir, Electrical, Functional, FireplaceQu, GarageType, GarageFinish, GarageQual, GarageCond, PavedDrive, PoolQC, Fence, MiscFeature, SaleType, SaleCondition))
+
+orderPrice$Clasificacion[orderPrice$SalePrice <= 139000] <- 'Economica'
+
+orderPrice$Clasificacion[orderPrice$SalePrice > 139000 & orderPrice$SalePrice <= 189893 ] <- 'Intermedia'
+
+orderPrice$Clasificacion[orderPrice$SalePrice > 189893] <- 'Cara'
+
+
+
+```
+
+#### Muestreo
+
+A continuación se separarán los datos en datos de prueba y de entrenamiento. Se realizará un muestreo balanceado de modo que hayan suficientes casas de cada tipo tanto en train como en test.
+
+```{r muestreo}
+# COnvertir en factores
+orderPrice <- orderPrice%>%mutate_at(c("Clasificacion"),as.factor)
+set.seed(456)
+economicas <- orderPrice[orderPrice$Clasificacion == 'Economica',]
+intermedias <- orderPrice[orderPrice$Clasificacion == 'Intermedia',]
+caras <- orderPrice[orderPrice$Clasificacion == 'Cara',]
+
+filasCasasE <- sample(nrow(economicas), nrow(economicas)*0.7)
+filasCasasI <- sample(nrow(intermedias), nrow(intermedias)*0.7)
+filasCasasC <- sample(nrow(caras), nrow(caras)*0.7)
+
+train <- rbind(economicas[filasCasasE,], intermedias[filasCasasI,], caras[filasCasasC,])
+test <- rbind(economicas[-filasCasasE,], intermedias[-filasCasasI,], caras[-filasCasasC,])
+```
+
+### Árbol de Clasificación
+
+A continuación se realizará un árbol de decisión cuyo propósito será intentar predecir en qué categoría pertenece cada caso basado en los atributos anteriores
+
+```{r arbolClasificacion}
+
+y<- test[,"Clasificacion"]
+test <- test%>% select(-c("SalePrice", "Clasificacion"))
+
+train <- train %>% select(-c("SalePrice"))
+
+modeloClasificacion <- rpart(Clasificacion~., train, method = "class")
+rpart.plot(modeloClasificacion)
+
+ypred <- predict(modeloClasificacion, newdata = test)
+ypred <- apply(ypred, 1, function(x) colnames(ypred)[which.max(x)])
+ypred <- factor(ypred)
+
+confusionMatrix(ypred, y)
 ```
 
