@@ -93,17 +93,16 @@ A continuacion se creará el nuevo DataFrame que contendra una nueva columa con 
 ```{r dividir}
 orderPrice <- pricesTrain[order(pricesTrain$SalePrice),]
 orderPrice['Clasificacion']<- list(1:nrow(orderPrice))
-orderPrice <- orderPrice %>% select(-c(Id, MSSubClass,MSZoning,Street,Alley,LotShape, LandContour, Utilities, LotConfig, LandSlope, Neighborhood, Condition1, Condition2, BldgType, HouseStyle, OverallQual, OverallCond, RoofStyle, RoofMatl, Exterior1st, Exterior2nd, MasVnrType, ExterQual, ExterCond,Foundation, BsmtQual, BsmtCond, BsmtExposure, BsmtFinType1, BsmtFinSF1, BsmtFinType2, Heating, HeatingQC, CentralAir, Electrical, Functional, FireplaceQu, GarageType, GarageFinish, GarageQual, GarageCond, PavedDrive, PoolQC, Fence, MiscFeature, SaleType, SaleCondition))
+orderPrice <- orderPrice %>% select(-c(Id, MoSold, YrSold, GarageYrBlt, Alley, LotShape, LandContour, Condition2, YearBuilt, Exterior2nd, FireplaceQu, GarageQual, SaleType,BsmtFinType2, BsmtFinSF2, BsmtUnfSF, BsmtFullBath, BsmtHalfBath, X3SsnPorch, GarageFinish))
+orderPrice <- orderPrice %>% mutate_at (c("MSSubClass","MSZoning", "Utilities", "LotConfig", "Street", "LandSlope", "Neighborhood", "Condition1", "BldgType", "HouseStyle", "OverallQual", "OverallCond", "RoofStyle", "PavedDrive", "RoofMatl", "Exterior1st", "MasVnrType", "ExterQual", "ExterCond","Foundation", "BsmtQual", "BsmtCond", "BsmtExposure", "BsmtFinType1", "Heating", "HeatingQC", "CentralAir","Electrical", "Functional", "GarageType", "GarageCond", "PoolQC", "Fence", "MiscFeature", "SaleCondition"), as.factor)
 
 orderPrice$Clasificacion[orderPrice$SalePrice <= 139000] <- 'Economica'
 
 orderPrice$Clasificacion[orderPrice$SalePrice > 139000 & orderPrice$SalePrice <= 189893 ] <- 'Intermedia'
 
 orderPrice$Clasificacion[orderPrice$SalePrice > 189893] <- 'Cara'
-
-
-
 ```
+
 
 #### Muestreo
 
@@ -132,6 +131,7 @@ A continuación se realizará un árbol de decisión cuyo propósito será inten
 ```{r arbolClasificacion}
 
 y<- test[,"Clasificacion"]
+dataResp <- test
 test <- test%>% select(-c("SalePrice", "Clasificacion"))
 
 train <- train %>% select(-c("SalePrice"))
@@ -143,12 +143,17 @@ ypred <- predict(modeloClasificacion, newdata = test)
 ypred <- apply(ypred, 1, function(x) colnames(ypred)[which.max(x)])
 ypred <- factor(ypred)
 
+
+plot(ypred , col="green",density=20,angle=135)
+plot(y, col="blue",density=20,angle=45,add=TRUE, beside = TRUE)
+legend("bottom",
+c("Predicción del modelo","Datos reales"),
+fill=c("green","blue"))
+
 confusionMatrix(ypred, y)
 ```
-<<<<<<< Updated upstream
-=======
 
-El árbol tuvo una efectividad de 70.84%, teniendo mayor efectividad clasificando las casas caras y la menor efectividad clasificando las intermedias, lo cual tiene sentido, pues, es más efectivo en los extremos. Además, la mayor cantidad de errores fue presentada al ubicar casas de precio intermedio en casas de precio bajo.
+Podemos ver en la gráfica, que el modelo predijo menor cantidad de casas caras que las que eran, mientras que predijo mayor cantidad de casas económicas e intermedias. Sin embargo la gráfica aunque no nos indica si las casas están bien clasificadas, por lo que no podemos asegurar que la clasificación es eficiente, basado solo en que clasificó casi la cantidad correcta en cada categoría. Utilizando una matriz de confusión, podemos ver que el árbol tuvo una efectividad de 74.94%, teniendo mayor efectividad clasificando las casas caras y la menor efectividad clasificando las intermedias, lo cual tiene sentido, pues, es más efectivo en los extremos. Además, la mayor cantidad de errores fue presentada al ubicar casas de precio intermedio en casas de precio bajo. 
 
 ### Árbol de clasificación con validación cruzada
 
@@ -224,4 +229,3 @@ confusionMatrix(ypredrf, y)
 
 ### 
 
->>>>>>> Stashed changes
