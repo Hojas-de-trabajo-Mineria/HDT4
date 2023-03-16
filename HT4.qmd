@@ -163,7 +163,7 @@ Podemos ver en la gráfica, que el modelo predijo menor cantidad de casas caras 
 ```{r crossValidation}
 set.seed(456)
 ct <- trainControl(method = 'cv', number = 10, verboseIter = T)
-View(train[,-61])
+
 mcv <- train(train[,-61], train$Clasificacion, trControl = ct, method = 'rpart')
 
 y2pred <- predict(mcv, newdata = test)
@@ -222,6 +222,8 @@ Con una profundidad de 7 el árbol no genera resultados diferentes del modelo es
 ### Random forest
 
 ```{r randomForest}
+train <- train %>% select (-c(PoolQC, Fence, MiscFeature, SaleCondition))
+na.omit(train)
 mrf <- randomForest(Clasificacion~.,train, na.action = na.omit)
 summary(mrf)
 
@@ -231,5 +233,5 @@ ypredrf <- factor(ypredrf)
 confusionMatrix(ypredrf, y)
 ```
 
-### 
+Veamo que este es el mejor arbol que tenemos, ya que su eficiencia es del 82.04%, mucho mayor     que la del árbol de decisión modelado anteriormente. De igual manera vemos que las que clasifica con mayor facilidad son las casas caras y las económicas, ya que son aquellas que se encuentran en los extremos
 
