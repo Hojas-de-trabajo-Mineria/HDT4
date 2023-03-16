@@ -47,6 +47,8 @@ numericasTest <- test[, c('MSSubClass', 'LotArea', 'OverallQual', 'OverallCond',
 library(rpart)
 arbol1 <- rpart(SalePrice ~ .,data=numericasTrain)
 rpart.plot(arbol1)
+
+
 ```
 
 ### que tan bueno es
@@ -61,6 +63,7 @@ par(new=TRUE)
 plot(test$GrLivArea,test$SalePrice,col="blue")
 
 ```
+Comparando con el modelo lineal realizado en la hoja de trabajo anterior, podemos notar que este modelo es peor que ese. En este modelo, los puntos de predicción están bastante dispersos y alejados de los puntos reales, mientras que en el modelo lineal, aunque tampoco es una aproximación certera, los puntos reales están más cercanos a la predicción
 
 ### Cambiando la profundidad 
 
@@ -76,7 +79,7 @@ a4<-predict(arbol4,newdata=test2)
 b4<-mean(a4-test$GrLivArea)
 ```
 
-podemos notar que el arbol con un menor error es cuando tiene una profundidad de 0.3
+Podemos notar que el arbol con un menor error es cuando tiene una profundidad de 0.3
 
 ### Nueva Variable respuesta
 
@@ -160,13 +163,14 @@ Podemos ver en la gráfica, que el modelo predijo menor cantidad de casas caras 
 ```{r crossValidation}
 set.seed(456)
 ct <- trainControl(method = 'cv', number = 10, verboseIter = T)
-mcv <- train(train[,-34], train$Clasificacion, trControl = ct, method = 'rpart')
+View(train[,-61])
+mcv <- train(train[,-61], train$Clasificacion, trControl = ct, method = 'rpart')
 
 y2pred <- predict(mcv, newdata = test)
 confusionMatrix(y2pred, y)
 ```
 
-Este modelo fue peor que el modelo sin validación cruzada, teniendo una eficacia del 59.68%. Se confundió menos al clasificar las caras, pero tuvo muchos más errores al clasificar las de precio intermedio.
+Este modelo fue peor que el modelo sin validación cruzada, teniendo una eficacia del 67.2%. Se confundió menos al clasificar las caras, pero tuvo muchos más errores al clasificar las de precio intermedio.
 
 ### Cambiando profundidades
 
@@ -218,7 +222,7 @@ Con una profundidad de 7 el árbol no genera resultados diferentes del modelo es
 ### Random forest
 
 ```{r randomForest}
-mrf <- randomForest(Clasificacion~., train, na.action = na.omit)
+mrf <- randomForest(Clasificacion~.,train, na.action = na.omit)
 summary(mrf)
 
 ypredrf <- predict(mrf, newdata = test)
