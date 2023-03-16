@@ -21,6 +21,7 @@ library(jtools)
 library(rpart)
 library(rpart.plot)
 library(caret)
+library(randomForest)
 
 pricesTrain <- read.csv("train.csv")
 ```
@@ -80,7 +81,6 @@ podemos notar que el arbol con un menor error es cuando tiene una profundidad de
 ### Nueva Variable respuesta
 
 ```{r}
-str(pricesTrain$SalePrice)
 quantile(pricesTrain$SalePrice, na.rm = T, probs = c(0,0.33,0.66,1))
 ```
 
@@ -145,3 +145,83 @@ ypred <- factor(ypred)
 
 confusionMatrix(ypred, y)
 ```
+<<<<<<< Updated upstream
+=======
+
+El árbol tuvo una efectividad de 70.84%, teniendo mayor efectividad clasificando las casas caras y la menor efectividad clasificando las intermedias, lo cual tiene sentido, pues, es más efectivo en los extremos. Además, la mayor cantidad de errores fue presentada al ubicar casas de precio intermedio en casas de precio bajo.
+
+### Árbol de clasificación con validación cruzada
+
+```{r crossValidation}
+set.seed(456)
+ct <- trainControl(method = 'cv', number = 10, verboseIter = T)
+mcv <- train(train[,-34], train$Clasificacion, trControl = ct, method = 'rpart')
+
+y2pred <- predict(mcv, newdata = test)
+confusionMatrix(y2pred, y)
+```
+
+Este modelo fue peor que el modelo sin validación cruzada, teniendo una eficacia del 59.68%. Se confundió menos al clasificar las caras, pero tuvo muchos más errores al clasificar las de precio intermedio.
+
+### Cambiando profundidades
+
+#### Profundidad 3
+
+```{r profundidad3}
+modeloClasificacion3 <- rpart(Clasificacion~., train, method = "class", maxdepth = 3)
+rpart.plot(modeloClasificacion3)
+
+ypred3 <- predict(modeloClasificacion, newdata = test)
+ypred3 <- apply(ypred3, 1, function(x) colnames(ypred3)[which.max(x)])
+ypred3 <- factor(ypred3)
+
+confusionMatrix(ypred3, y)
+```
+
+Con una profundidad de 3 el árbol no genera resultados diferentes del modelo estándar.
+
+#### Profundidad 5
+
+```{r profundidad5}
+modeloClasificacion5 <- rpart(Clasificacion~., train, method = "class", maxdepth = 5)
+rpart.plot(modeloClasificacion5)
+
+ypred5 <- predict(modeloClasificacion, newdata = test)
+ypred5 <- apply(ypred5, 1, function(x) colnames(ypred5)[which.max(x)])
+ypred5 <- factor(ypred5)
+
+confusionMatrix(ypred5, y)
+```
+
+Con una profundidad de 5 el árbol no genera resultados diferentes del modelo estándar.
+
+#### Profundidad 7
+
+```{r profundidad7}
+modeloClasificacion7 <- rpart(Clasificacion~., train, method = "class", maxdepth = 7)
+rpart.plot(modeloClasificacion7)
+
+ypred7 <- predict(modeloClasificacion, newdata = test)
+ypred7 <- apply(ypred7, 1, function(x) colnames(ypred7)[which.max(x)])
+ypred7 <- factor(ypred7)
+
+confusionMatrix(ypred7, y)
+```
+
+Con una profundidad de 7 el árbol no genera resultados diferentes del modelo estándar.
+
+### Random forest
+
+```{r randomForest}
+mrf <- randomForest(Clasificacion~., train, na.action = na.omit)
+summary(mrf)
+
+ypredrf <- predict(mrf, newdata = test)
+ypredrf <- factor(ypredrf)
+
+confusionMatrix(ypredrf, y)
+```
+
+### 
+
+>>>>>>> Stashed changes
